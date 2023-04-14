@@ -1,5 +1,5 @@
 # CPI_CroCoLSTM
 
-run this project:
-cd script
-./ run.sh
+run this project: \\
+cd script \\
+./ run.sh \\
