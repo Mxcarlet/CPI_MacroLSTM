@@ -5,10 +5,12 @@ import math
 import numpy as np
 import pandas as pd
 
-class Pro_MLP_for_SimCLR(nn.Module):
+class Pro_for_CCL(nn.Module):
+    """
+    Projection layer of the Cyclic Consistence Loss function
+    """
     def __init__(self, in_dim=256, hidden_dim=512,out_dim=256):
         super().__init__()
-
         self.fc = nn.Sequential(nn.Linear(in_dim,hidden_dim),nn.ReLU(),nn.Linear(hidden_dim,out_dim))
 
     def forward(self,x):
@@ -16,6 +18,9 @@ class Pro_MLP_for_SimCLR(nn.Module):
 
 
 class Feq_Cross_Correlation(nn.Module):
+    """
+    Cross_Correlation based Frequency Enhanced module
+    """
     def __init__(self, S_s, I_s, K, seq_len):
         super(Feq_Cross_Correlation, self).__init__()
         self.seq_len = seq_len
@@ -31,6 +36,9 @@ class Feq_Cross_Correlation(nn.Module):
         self.K = K
 
     def group_Agg(self, queries1, keys, values,L):
+        """
+        Cross_Correlation based Group Aggregate module
+        """
         group_list = [0]+self.group_list
         corr_group = []
         queries = queries1.repeat(1,1,8)
@@ -97,7 +105,7 @@ class Feq_Cross_Correlation(nn.Module):
 
         return out, topk_V_out, weight_k
 
-class LSTMModel_part(nn.Module):
+class CroCoLSTM_part(nn.Module):
     def __init__(self, configs, K, group_size, hidden_size=128, num_layers=2, dropout=0.0):
         super().__init__()
         self.seq_len = configs.seq_len
@@ -161,9 +169,9 @@ class LSTMModel(nn.Module):
         self.driven_size = configs.driven_size
         self.group_size = 8
         self.K = (configs.driven_size + 1) // 4
-        self.CroCoLSTM = LSTMModel_part(configs, self.K, self.group_size, hidden_size=hidden_size, num_layers=num_layers, dropout=dropout)
+        self.CroCoLSTM = CroCoLSTM_part(configs, self.K, self.group_size, hidden_size=hidden_size, num_layers=num_layers, dropout=dropout)
 
-        self.projector1 = Pro_MLP_for_SimCLR(in_dim=self.K-1,
+        self.projector = Pro_for_CCL(in_dim=self.K-1,
                                              hidden_dim=hidden_size * 2,
                                              out_dim=hidden_size)
 
@@ -172,8 +180,8 @@ class LSTMModel(nn.Module):
         zeros = torch.zeros([driven.shape[0], self.pred_len, driven.shape[2]+target.shape[2]+self.group_size], device=driven.device)
 
         pre, weight_k1, weight_k2 = self.CroCoLSTM(driven, target, zeros)
-        pro_loop2 = self.projector1(weight_k2.view(1,-1))
-        pro_loop1 = self.projector1(weight_k1.view(1,-1))
+        pro_loop2 = self.projector(weight_k2.view(1,-1))
+        pro_loop1 = self.projector(weight_k1.view(1,-1))
         temp = 0.01
         a = (pro_loop2 / temp).softmax(dim=-1)
         b = (pro_loop1 / temp).softmax(dim=-1)
