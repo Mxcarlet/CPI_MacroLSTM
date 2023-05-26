@@ -87,10 +87,9 @@ class Feq_Cross_Correlation(nn.Module):
         Vftt = torch.einsum("bsl,bds->bdl", qk_ftt, v_fft)
         values_ftt_out = torch.fft.irfft(Vftt / self.I_s / self.I_s, n=queries.size(1)).permute(0, 2, 1)
 
-        # Cross-Correlation ========================================================================#
+        # TopK =====================================================================================#
         topk, index = torch.topk(torch.mean(torch.mean(corr, -1), 0), self.K-1, -1)
         weight_k = torch.softmax(topk * scale, dim=-1)
-        # TopK =====================================================================================#
         topk_V_ft = torch.zeros((B, L, index.shape[0])).to(index.device)
         topk_V = torch.zeros((B, L, index.shape[0])).to(index.device)
         for i in range(index.shape[0]):
