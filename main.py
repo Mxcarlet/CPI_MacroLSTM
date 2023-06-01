@@ -237,6 +237,19 @@ class Trainer(object):
             f.write('\n')
             f.write('\n')
             f.close()
+def data_split(full_list, ratio1, ratio2, shuffle=False):
+
+    n_total = len(full_list)
+    offset1 = int(n_total * ratio1)
+    offset2 = int(n_total * (ratio1 + ratio2))
+    if n_total == 0 or offset1 < 1 or offset2 < 1:
+        return [], [], full_list
+    if shuffle:
+        random.shuffle(full_list)
+    sublist_1 = full_list[:offset1]
+    sublist_2 = full_list[offset1:offset2]
+    sublist_3 = full_list[offset2:]
+    return sublist_1, sublist_2, sublist_3
 
 def main(args):
     global global_log_file
@@ -245,14 +258,8 @@ def main(args):
 
     driven_datas, target_datas = Loader(args.mat_path)
 
-    train_index = list(range(0, round((len(driven_datas) - args.seq_len - args.pred_len) * 0.7)))
-    val_index = list(range(round((len(driven_datas) - args.seq_len - args.pred_len) * 0.7),
-                           round((len(driven_datas) - args.seq_len - args.pred_len) * 0.7) + round(
-                               (len(driven_datas) - args.seq_len - args.pred_len) * 0.1)))
-    test_index = list(
-        range(round((len(driven_datas) - args.seq_len - args.pred_len) * 0.7) + round((len(driven_datas) - args.seq_len - args.pred_len) * 0.1),
-              round((len(driven_datas) - args.seq_len - args.pred_len) * 0.7) + round((len(driven_datas) - args.seq_len - args.pred_len) * 0.1) + round(
-                  (len(driven_datas) - args.seq_len - args.pred_len) * 0.2) + 1))
+    split = [0.7, 0.1, 0.2]
+    train_index, val_index, test_index = data_split(list(range(0, (len(driven_datas) - args.seq_len - args.pred_len + 1))),split[0], split[1])
 
     train_set = Data_Set(driven_datas, target_datas, train_index, args.seq_len, args.pred_len)
     train_loader = torch_data.DataLoader(train_set, batch_size=args.batch_size, drop_last=False, shuffle=True, num_workers=2)
