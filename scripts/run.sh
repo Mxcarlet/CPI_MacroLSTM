@@ -2,7 +2,7 @@ export CUDA_VISIBLE_DEVICES=0
 
 cd ../
 
-for model in CroCoLSTM
+for model in MacroLSTM
 do
 
 for seq_len in 36 60 96

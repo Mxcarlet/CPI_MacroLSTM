@@ -2,7 +2,7 @@ import torch as th
 import torch.optim as optim
 import torch.utils.data as torch_data
 import random
-from models.CroCoLSTM import LSTMModel as CroCoLSTM
+from models.MacroLSTM import LSTMModel as MacroLSTM
 from torch.utils.data.sampler import SequentialSampler
 from dataloader import Data_Set, Loader
 import datetime
@@ -272,8 +272,8 @@ def main(args):
     test_sc = SequentialSampler(test_set)
     test_loader = torch_data.DataLoader(test_set, batch_size=args.batch_size, drop_last=False, shuffle=False, num_workers=2, sampler=test_sc)
 
-    if args.module == "CroCoLSTM":
-        model = CroCoLSTM(args)
+    if args.module == "MacroLSTM":
+        model = MacroLSTM(args)
     else:
         raise RuntimeError("please check the module name!!!")
     gpuids = tuple(map(int, args.gpus.split(",")))
@@ -301,7 +301,7 @@ if __name__ == "__main__":
         description="",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     parser.add_argument("--gpus",type=str,default="0",help="Training on which GPUs ""(one or more, egs: 0, \"0,1\")")
-    parser.add_argument("--module",type=str,default="CroCoLSTM",help="Training module ")
+    parser.add_argument("--module",type=str,default="MacroLSTM",help="Training module ")
     parser.add_argument("--epochs",type=int,default=100,help="Number of training epochs")
     parser.add_argument("--mat_path",type=str,default="./datasets/Datas.mat")
     parser.add_argument("--resume",type=str,default="",help="Exist model to resume training from")

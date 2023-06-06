@@ -104,7 +104,7 @@ class Feq_Cross_Correlation(nn.Module):
 
         return out, topk_V_out, weight_k
 
-class CroCoLSTM_part(nn.Module):
+class MacroLSTM_part(nn.Module):
     def __init__(self, configs, K, group_size, hidden_size=128, num_layers=2, dropout=0.0):
         super().__init__()
         self.seq_len = configs.seq_len
@@ -168,7 +168,7 @@ class LSTMModel(nn.Module):
         self.driven_size = configs.driven_size
         self.group_size = 8
         self.K = (configs.driven_size + 1) // 4
-        self.CroCoLSTM = CroCoLSTM_part(configs, self.K, self.group_size, hidden_size=hidden_size, num_layers=num_layers, dropout=dropout)
+        self.MacroLSTM = MacroLSTM_part(configs, self.K, self.group_size, hidden_size=hidden_size, num_layers=num_layers, dropout=dropout)
 
         self.projector = Pro_for_CCL(in_dim=self.K-1,
                                              hidden_dim=hidden_size * 2,
@@ -178,7 +178,7 @@ class LSTMModel(nn.Module):
         #=======init=========#
         zeros = torch.zeros([driven.shape[0], self.pred_len, driven.shape[2]+target.shape[2]+self.group_size], device=driven.device)
 
-        pre, weight_k1, weight_k2 = self.CroCoLSTM(driven, target, zeros)
+        pre, weight_k1, weight_k2 = self.MacroLSTM(driven, target, zeros)
         pro_loop2 = self.projector(weight_k2.view(1,-1))
         pro_loop1 = self.projector(weight_k1.view(1,-1))
         temp = 0.01
