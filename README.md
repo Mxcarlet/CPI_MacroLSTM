@@ -1,4 +1,4 @@
-# CroCoLSTM
+# MacroLSTM
 
 ## How to run this project:
 ```bash
